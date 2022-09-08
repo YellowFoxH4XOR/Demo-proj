@@ -1,5 +1,3 @@
-import imp
-from re import I
 from fastapi_login import LoginManager
 from fastapi import Depends, APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
@@ -15,10 +13,17 @@ from routers.helper import (
 
 manager = LoginManager(SECRET, token_url='/token')
 
-fake_db = {'a': {'password': 'a'}}
 
 @manager.user_loader()
 def load_user(email: str):  # could also be an asynchronous function
+    """This Function works as authenticator function
+
+    Args:
+        email (str): user email
+
+    Returns:
+        tuple/None: if true return tuple else return None
+    """
     db_obj = db_session.query(User).filter(User.email == email).first()
     if(db_obj):
         return (db_obj.email, db_obj.hashed_password, db_obj.is_active, db_obj.id)
@@ -33,6 +38,19 @@ router = APIRouter(
 
 @router.post('/')
 async def get_token(data: OAuth2PasswordRequestForm = Depends()):
+    """Oauth implementation route
+
+    Args:
+        data (OAuth2PasswordRequestForm, optional): _description_. Defaults to Depends().
+
+    Raises:
+        InvalidCredentialsException: user no found
+        InvalidCredentialsException: password is wrong
+        InvalidCredentialsException: user is not active
+
+    Returns:
+        dict: access token
+    """
     email = data.username
     password = data.password
 
@@ -46,6 +64,6 @@ async def get_token(data: OAuth2PasswordRequestForm = Depends()):
         raise InvalidCredentialsException
 
     access_token = manager.create_access_token(
-        data=dict(sub=email), expires=timedelta(minutes=30)
+        data=dict(sub=email), expires=timedelta(minutes=30) # set to 30 mins but can be changed
     )
     return {'access_token': access_token, 'token_type': 'bearer'}

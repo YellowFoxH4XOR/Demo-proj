@@ -1,4 +1,3 @@
-from os import stat
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from internal.token import manager
@@ -16,12 +15,28 @@ router = APIRouter(
 )
 
 class UserPayload(BaseModel):
+    """User Payload for signup
+
+    Args:
+        BaseModel (_type_): pydantic
+    """
     email: str
     password: str
 
 
 @router.get("/logged-user-details", status_code=status.HTTP_200_OK)
 async def get_user_details(user=Depends(manager)):
+    """This Route is used to get the current logged in user details
+
+    Args:
+        user (LoginManager, optional): Login manger. Defaults to Depends(manager).
+
+    Raises:
+        HTTPException: 418 exception
+
+    Returns:
+        dict: response
+    """
     try:
         username = tuple(user)[0]
         db_obj = db_session.query(User).filter(User.email == username).first()
@@ -32,7 +47,7 @@ async def get_user_details(user=Depends(manager)):
             }
             return response
         else:
-            return "Username not found"
+            return {"message": "Username not found"}
     except Exception:
         raise HTTPException(
                 status_code=418, detail="Exception occurred while saving details"
@@ -45,6 +60,18 @@ async def get_user_details(user=Depends(manager)):
     status_code=status.HTTP_201_CREATED
 )
 async def add_user(data: UserPayload):
+    """_summary_
+
+    Args:
+        data (UserPayload): Payload to create new user
+
+    Raises:
+        HTTPException: 409 conflict
+        HTTPException: 418 exception
+
+    Returns:
+        str: status
+    """
     user_exists = await check_if_user_exists(data.email)
     if(not user_exists):
         try:
