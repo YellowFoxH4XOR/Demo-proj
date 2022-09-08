@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from internal.token import manager
 from database import db_session
 from database.models import Tweet
-import traceback
 
 
 router = APIRouter(
@@ -86,7 +85,6 @@ async def get_user_tweets(user=Depends(manager)):
         result = {"tweets": self_tweet_list, "retweets": retweet_list}
         return result
     except Exception:
-        print(traceback.format_exc())
         raise HTTPException(
                 status_code=418, detail="Exception occurred while fetching tweets"
             )

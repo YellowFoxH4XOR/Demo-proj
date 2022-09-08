@@ -55,7 +55,6 @@ async def get_token(data: OAuth2PasswordRequestForm = Depends()):
     password = data.password
 
     user_pass = load_user(email)
-    print(user_pass)
     if not user_pass:
         raise InvalidCredentialsException
     elif password != await decode_hash_pass(user_pass[1]):
